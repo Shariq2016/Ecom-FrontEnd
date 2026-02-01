@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import axios from "axios";
+
 export default function AdminLogin() {
   const navigate = useNavigate();
 
@@ -10,26 +10,42 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-   console.log("ADMIN LOGIN LOADED");
+  console.log("ADMIN LOGIN LOADED");
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    // simple hardcoded admin login (for now)
-    if (username === "admin" && password === "admin123") {
-      localStorage.setItem("token", "FAKE_ADMIN_TOKEN_123");
-      navigate("/");
-    } else {
-      setError("Invalid credentials!");
+    try {
+      // Make API call to backend
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/admin/login`, {
+        username: username,
+        password: password,
+      });
+
+      // If successful, save token and navigate
+      if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        navigate("/");
+      }
+    } catch (err) {
+      // Handle errors
+      if (err.response) {
+        // Server responded with error status
+        setError(err.response.data.message || "Invalid credentials!");
+      } else if (err.request) {
+        // Request was made but no response received
+        setError("Cannot connect to server. Please try again.");
+      } else {
+        // Something else happened
+        setError("An error occurred. Please try again.");
+      }
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div style={{ maxWidth: 420, margin: "60px auto", padding: 20 }}>
