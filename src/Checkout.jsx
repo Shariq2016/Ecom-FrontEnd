@@ -32,7 +32,7 @@ const Checkout = () => {
 
   const fetchRazorpayKey = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/razorpay-key");
+      const response = await fetch("https://ecom-backend-1-ydje.onrender.com/api/razorpay-key");
       const data = await response.json();
       setRazorpayKey(data.key);
     } catch (error) {
@@ -97,7 +97,7 @@ const Checkout = () => {
 
     try {
       // Step 1: Create order on backend
-      const orderResponse = await fetch("http://localhost:8080/api/create-order", {
+      const orderResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +112,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || `http://localhost:8080/api/product/${item.id}/image`
+            imageUrl: item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`
           })),
           total: total
         }),
@@ -175,7 +175,7 @@ const Checkout = () => {
       setLoading(true);
 
       // Verify payment on backend
-      const verifyResponse = await fetch("http://localhost:8080/api/verify-payment", {
+      const verifyResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -414,7 +414,7 @@ const Checkout = () => {
           <div className="order-items">
             {cart.map((item) => (
               <div key={item.id} className="order-item">
-                <img src={item.imageUrl || `http://localhost:8080/api/product/${item.id}/image`} alt={item.name} />
+                <img src={item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`} alt={item.name} />
                 <div className="order-item-details">
                   <h4>{item.name}</h4>
                   <p>Qty: {item.quantity}</p>
