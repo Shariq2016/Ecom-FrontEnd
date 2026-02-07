@@ -53,18 +53,12 @@ export default function AdminOrders() {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const API = axios.create({
-      baseURL: import.meta.env.VITE_API_URL, // e.g. http://localhost:8080/api
-    });
-     await API.put(
-  `/order/${orderId}/status`,
-  { status: newStatus },
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
+      
+      await axios.put(
+       import.meta.env.VITE_API_URL+`/order/${orderId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       fetchOrders();
       alert(`Order status updated to ${newStatus}`);
@@ -84,7 +78,7 @@ export default function AdminOrders() {
       const token = localStorage.getItem("token");
       
       await axios.delete(
-        `http://localhost:8080/api/order/${orderId}`,
+        import.meta.env.VITE_API_URL+`/order/${orderId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
