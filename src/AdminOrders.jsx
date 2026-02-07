@@ -25,11 +25,19 @@ export default function AdminOrders() {
         navigate("/admin/login");
         return;
       }
+          const API = axios.create({
+  baseURL: import.meta.env.VITE_API_URL, 
+});
 
-      const response = await axios.get("http://localhost:8080/api/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
 
+      // Fetch all orders
+      const response = await API.get("/orders", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
+      
       console.log("Fetched orders:", response.data);
       setOrders(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {

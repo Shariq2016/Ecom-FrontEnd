@@ -28,13 +28,18 @@ export default function AdminDashboard() {
       }
 
       console.log("Fetching orders with token:", token);
+      const API = axios.create({
+  baseURL: import.meta.env.VITE_API_URL, 
+});
+
 
       // Fetch all orders
-      const response = await axios.get("http://localhost:8080/api/orders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await API.get("/orders", {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
+
 
       console.log("Orders response:", response.data);
       const orders = response.data;
