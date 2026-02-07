@@ -12,11 +12,13 @@ import axios from "axios";
 import "./styles.css";
 import AdminLogin from "./AdminLogin";
 import Checkout from "./Checkout";
+import AdminOrders from './AdminOrders';
+import AdminDashboard from './AdminDashboard';
 
 export const AppContext = createContext();
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ,
+  baseURL: "http://localhost:8080/api",
 });
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -146,6 +148,9 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
   const [showResults, setShowResults] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Check if admin is logged in
+  const isAdminLoggedIn = !!localStorage.getItem("token");
+
   const categories = [
     "Almonds",
     "Cashews",
@@ -222,12 +227,26 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
             Home
           </Link>
 
-          {localStorage.getItem("token") && (
+          {/* Admin Dashboard - Only visible when logged in */}
+          {isAdminLoggedIn && (
+            <Link to="/admin/dashboard" className="nav-link">
+              📊 Dashboard
+            </Link>
+          )}
+
+          {/* Add Product - Only visible when logged in */}
+          {isAdminLoggedIn && (
             <Link to="/admin/add" className="nav-link">
               Add Product
             </Link>
           )}
 
+          {/* Admin Login - Only visible when NOT logged in */}
+          {!isAdminLoggedIn && (
+            <Link to="/admin/login" className="nav-link">
+              🔐 Admin Login
+            </Link>
+          )}
 
           <div className={`dropdown ${dropdownOpen ? "open" : ""}`}>
             <button
@@ -999,6 +1018,8 @@ function App() {
               <Route path="/admin/edit/:id"
                 element={<ProductForm isEdit={true} />}
               />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+               <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>
           </main>
         </div>

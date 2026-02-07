@@ -10,6 +10,7 @@ const Checkout = () => {
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment
   const [loading, setLoading] = useState(false);
   const [razorpayKey, setRazorpayKey] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("online"); // "online" or "cod"
 
   // Shipping Form State
   const [shippingDetails, setShippingDetails] = useState({
@@ -32,7 +33,7 @@ const Checkout = () => {
 
   const fetchRazorpayKey = async () => {
     try {
-      const response = await fetch("https://ecom-backend-1-ydje.onrender.com/api/razorpay-key");
+      const response = await fetch("http://localhost:8080/api/razorpay-key");
       const data = await response.json();
       setRazorpayKey(data.key);
     } catch (error) {
@@ -91,13 +92,59 @@ const Checkout = () => {
     }
   };
 
+  // Handle Cash on Delivery
+  const handleCODOrder = async () => {
+    setLoading(true);
+
+    try {
+      // Create COD order on backend
+      const orderResponse = await fetch("http://localhost:8080/api/create-cod-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shippingDetails: shippingDetails,
+          cart: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            brand: item.brand,
+            category: item.category,
+            price: item.price,
+            quantity: item.quantity,
+            imageUrl: item.imageUrl || `http://localhost:8080/api/product/${item.id}/image`
+          })),
+          subtotal: subtotal,
+          shippingCost: shipping,
+          tax: tax,
+          total: total,
+          paymentMethod: "COD"
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const orderData = await orderResponse.json();
+
+      // Clear cart and show success
+      clearCart();
+      alert(`🎉 Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\n\nYou will pay ₹${total.toFixed(2)} in cash upon delivery.\n\nWe'll send you updates via email at ${shippingDetails.email}`);
+      navigate("/");
+    } catch (error) {
+      console.error("Error creating COD order:", error);
+      alert("Error processing order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Initialize Razorpay payment
   const handleRazorpayPayment = async () => {
     setLoading(true);
 
     try {
       // Step 1: Create order on backend
-      const orderResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/create-order", {
+      const orderResponse = await fetch("http://localhost:8080/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +159,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`
+            imageUrl: item.imageUrl || `http://localhost:8080/api/product/${item.id}/image`
           })),
           total: total
         }),
@@ -175,7 +222,7 @@ const Checkout = () => {
       setLoading(true);
 
       // Verify payment on backend
-      const verifyResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/verify-payment", {
+      const verifyResponse = await fetch("http://localhost:8080/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -227,7 +274,6 @@ const Checkout = () => {
             <div className="step-number">1</div>
             <div className="step-label">Shipping Details</div>
           </div>
-          <div className="step-divider"></div>
           <div className={`step ${step >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
             <div className="step-label">Payment</div>
@@ -374,35 +420,93 @@ const Checkout = () => {
                 </button>
               </div>
 
-              <div className="payment-method-card">
-                <div className="razorpay-info">
-                  <img 
-                    src="https://razorpay.com/assets/razorpay-glyph.svg" 
-                    alt="Razorpay" 
-                    style={{ width: "50px", marginBottom: "1rem" }}
-                  />
-                  <h3>Secure Payment via Razorpay</h3>
-                  <p>We accept UPI, Cards, Net Banking, and Wallets</p>
-                  <div className="payment-logos">
-                    <span>💳 Cards</span>
-                    <span>📱 UPI</span>
-                    <span>🏦 Net Banking</span>
-                    <span>💛 Wallets</span>
+              {/* Payment Method Selection */}
+              <div className="payment-methods">
+                <h3>Choose Payment Method</h3>
+                
+                <div className="payment-options">
+                  {/* Online Payment Option */}
+                  <div 
+                    className={`payment-option ${paymentMethod === "online" ? "selected" : ""}`}
+                    onClick={() => setPaymentMethod("online")}
+                  >
+                    <input
+                      type="radio"
+                      id="online"
+                      name="paymentMethod"
+                      value="online"
+                      checked={paymentMethod === "online"}
+                      onChange={() => setPaymentMethod("online")}
+                    />
+                    <label htmlFor="online">
+                      <div className="payment-option-content">
+                        <h4>💳 Online Payment (Razorpay)</h4>
+                        <p>Pay securely using UPI, Cards, Net Banking, or Wallets</p>
+                        <div className="payment-logos">
+                          <span>💳 Cards</span>
+                          <span>📱 UPI</span>
+                          <span>🏦 Banking</span>
+                          <span>💛 Wallets</span>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Cash on Delivery Option */}
+                  <div 
+                    className={`payment-option ${paymentMethod === "cod" ? "selected" : ""}`}
+                    onClick={() => setPaymentMethod("cod")}
+                  >
+                    <input
+                      type="radio"
+                      id="cod"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === "cod"}
+                      onChange={() => setPaymentMethod("cod")}
+                    />
+                    <label htmlFor="cod">
+                      <div className="payment-option-content">
+                        <h4>💵 Cash on Delivery</h4>
+                        <p>Pay with cash when your order is delivered</p>
+                        <div className="cod-info">
+                          <span>✅ No online payment required</span>
+                          <span>✅ Pay when you receive</span>
+                        </div>
+                      </div>
+                    </label>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleRazorpayPayment}
-                  disabled={loading}
-                  className="pay-now-btn"
-                >
-                  {loading ? "Processing..." : `Pay ₹${total.toFixed(2)}`}
-                </button>
-
-                <p className="secure-text">
-                  🔒 Your payment information is secure and encrypted
-                </p>
               </div>
+
+              {/* Payment Button */}
+              {paymentMethod === "online" ? (
+                <div className="payment-method-card">
+                  <button
+                    onClick={handleRazorpayPayment}
+                    disabled={loading}
+                    className="pay-now-btn"
+                  >
+                    {loading ? "Processing..." : `Pay ₹${total.toFixed(2)} Now`}
+                  </button>
+                  <p className="secure-text">
+                    🔒 Your payment information is secure and encrypted
+                  </p>
+                </div>
+              ) : (
+                <div className="payment-method-card">
+                  <button
+                    onClick={handleCODOrder}
+                    disabled={loading}
+                    className="cod-btn"
+                  >
+                    {loading ? "Processing..." : `Place Order - Pay ₹${total.toFixed(2)} on Delivery`}
+                  </button>
+                  <p className="secure-text">
+                    💵 You will pay in cash when your order arrives
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -414,7 +518,7 @@ const Checkout = () => {
           <div className="order-items">
             {cart.map((item) => (
               <div key={item.id} className="order-item">
-                <img src={item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`} alt={item.name} />
+                <img src={item.imageUrl || `http://localhost:8080/api/product/${item.id}/image`} alt={item.name} />
                 <div className="order-item-details">
                   <h4>{item.name}</h4>
                   <p>Qty: {item.quantity}</p>
