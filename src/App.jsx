@@ -216,7 +216,7 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
           setSearchQuery("");
           onSearch("", []);
         }}>
-          🌰 AYaan's Dry-fruit Store
+          🌰 Rk Dry-fruit Store
         </Link>
 
         <div className="navbar-menu">
@@ -398,7 +398,7 @@ const ProductSection = ({ section, products, addToCart, selectedCategory }) => {
                 <h3 className="product-title">{product.name}</h3>
 
                 <div className="product-bottom">
-                  <span className="product-price">${product.price}</span>
+                  <span className="product-price">₹{product.price}</span>
                 </div>
               </div>
             </Link>
