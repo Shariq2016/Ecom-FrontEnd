@@ -216,7 +216,7 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
           setSearchQuery("");
           onSearch("", []);
         }}>
-          🌰 Rk Dry-fruit Store
+          🌰 RK Dry-fruit Store
         </Link>
 
         <div className="navbar-menu">
