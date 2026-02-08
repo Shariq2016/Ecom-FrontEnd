@@ -32,20 +32,15 @@ const Checkout = () => {
     fetchRazorpayKey();
   }, []);
 
-  const fetchRazorpayKey = async () => {
-    try {
-      const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // ends with /api
-});
-
-      const response = await await API.get("/razorpay-key");
-      const data = await response.json();
-      setRazorpayKey(data.key);
-    } catch (error) {
-      console.error("Error fetching Razorpay key:", error);
-    }
-  };
-
+ const fetchRazorpayKey = async () => {
+  try {
+    const response = await API.get("/razorpay-key");  // ✅ Single await
+    console.log("Razorpay response:", response.data);  // Debug log
+    setRazorpayKey(response.data.key);  // ✅ Use response.data, not response.json()
+  } catch (error) {
+    console.error("Error fetching Razorpay key:", error);
+  }
+};
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 500 ? 0 : 50;
