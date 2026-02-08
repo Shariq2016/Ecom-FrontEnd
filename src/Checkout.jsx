@@ -32,15 +32,16 @@ const Checkout = () => {
     fetchRazorpayKey();
   }, []);
 
- const fetchRazorpayKey = async () => {
-  try {
-    const response = await API.get("/razorpay-key");  // ✅ Single await
-    console.log("Razorpay response:", response.data);  // Debug log
-    setRazorpayKey(response.data.key);  // ✅ Use response.data, not response.json()
-  } catch (error) {
-    console.error("Error fetching Razorpay key:", error);
-  }
-};
+  const fetchRazorpayKey = async () => {
+    try {
+      const response = await fetch("https://ecom-backend-1-ydje.onrender.com/api/razorpay-key");
+      const data = await response.json();
+      setRazorpayKey(data.key);
+    } catch (error) {
+      console.error("Error fetching Razorpay key:", error);
+    }
+  };
+
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 500 ? 0 : 50;
@@ -98,7 +99,7 @@ const Checkout = () => {
 
     try {
       // Create COD order on backend
-      const orderResponse = await fetch( import.meta.env.VITE_API_URL + "/create-cod-order", {
+      const orderResponse = await fetch( "https://ecom-backend-1-ydje.onrender.com/api/create-cod-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,7 +111,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || import.meta.env.VITE_API_URL +"/image"
+            imageUrl: item.imageUrl || "https://ecom-backend-1-ydje.onrender.com/api/image"
           })),
           subtotal: subtotal,
           shippingCost: shipping,
@@ -144,7 +145,7 @@ const Checkout = () => {
 
     try {
       // Step 1: Create order on backend
-      const orderResponse = await fetch(import.meta.env.VITE_API_URL + "/create-order", {
+      const orderResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,8 +160,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || import.meta.env.VITE_API_URL + `/product/${item.id}/image`
-
+            imageUrl: item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`
           })),
           total: total
         }),
@@ -223,7 +223,7 @@ const Checkout = () => {
       setLoading(true);
 
       // Verify payment on backend
-      const verifyResponse = await fetch( import.meta.env.VITE_API_URL + "/verify-payment", {
+      const verifyResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -275,6 +275,7 @@ const Checkout = () => {
             <div className="step-number">1</div>
             <div className="step-label">Shipping Details</div>
           </div>
+          <div className="step-divider"></div>
           <div className={`step ${step >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
             <div className="step-label">Payment</div>
@@ -404,7 +405,7 @@ const Checkout = () => {
                 Proceed to Payment →
               </button>
             </div>
-          ) : (
+          ) : ( 
             // STEP 2: Payment
             <div className="payment-form">
               <h2>💳 Payment Method</h2>
@@ -422,7 +423,8 @@ const Checkout = () => {
               </div>
 
               {/* Payment Method Selection */}
-              <div className="payment-methods">
+           
+             <div className="payment-methods">
                 <h3>Choose Payment Method</h3>
                 
                 <div className="payment-options">
@@ -511,7 +513,6 @@ const Checkout = () => {
             </div>
           )}
         </div>
-
         {/* Right Side - Order Summary */}
         <div className="order-summary-section">
           <h3>📋 Order Summary</h3>
@@ -519,7 +520,7 @@ const Checkout = () => {
           <div className="order-items">
             {cart.map((item) => (
               <div key={item.id} className="order-item">
-                <img src={item.imageUrl || import.meta.env.VITE_API_URL + `/product/${item.id}/image`} alt={item.name} />
+                <img src={item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`} alt={item.name} />
                 <div className="order-item-details">
                   <h4>{item.name}</h4>
                   <p>Qty: {item.quantity}</p>
