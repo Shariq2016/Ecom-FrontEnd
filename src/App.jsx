@@ -28,6 +28,21 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
+const Snowfall = () => {
+  // Generate 20 snowflakes
+  const snowflakes = Array.from({ length: 300 }, (_, i) => i);
+
+  return (
+    <div className="snowfall-container">
+      {snowflakes.map((i) => (
+        <div key={i} className="snowflake">
+          ❄
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // Define sections - add more here to extend
 const SECTIONS = [
   { id: "new-arrivals", title: "🎉 New Arrivals", subtitle: "Freshly added to our store", emoji: "✨" },
@@ -208,7 +223,7 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
   const toggleTheme = () => {
     setTheme(theme === "light-theme" ? "dark-theme" : "light-theme");
   };
-
+  
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -990,6 +1005,7 @@ function App() {
     <BrowserRouter>
       <AppProvider>
         <div className="app">
+           <Snowfall/>
           <Navbar
             onCategorySelect={setSelectedCategory}
             onSearch={(query, results) => {
