@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "./App";
 import "./styles.css";
+import axios from "axios";
 
 const Checkout = () => {
   const navigate = useNavigate();
