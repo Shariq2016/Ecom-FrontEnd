@@ -45,8 +45,7 @@ const Checkout = () => {
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = subtotal > 500 ? 0 : 50;
-  const tax = subtotal * 0.18; // 18% GST
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping ;
 
   // Validate shipping form
   const validateForm = () => {
@@ -115,7 +114,6 @@ const Checkout = () => {
           })),
           subtotal: subtotal,
           shippingCost: shipping,
-          tax: tax,
           total: total,
           paymentMethod: "COD"
         }),
@@ -541,10 +539,7 @@ const Checkout = () => {
               <span>Shipping:</span>
               <span>{shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}</span>
             </div>
-            <div className="total-row">
-              <span>Tax (GST 18%):</span>
-              <span>₹{tax.toFixed(2)}</span>
-            </div>
+          
             <div className="total-row grand-total">
               <span>Total:</span>
               <span>₹{total.toFixed(2)}</span>

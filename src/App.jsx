@@ -256,12 +256,7 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
             </Link>
           )}
 
-          {/* Admin Login - Only visible when NOT logged in */}
-          {!isAdminLoggedIn && (
-            <Link to="/admin/login" className="nav-link">
-              🔐 Admin Login
-            </Link>
-          )}
+          
 
           <div className={`dropdown ${dropdownOpen ? "open" : ""}`}>
             <button
@@ -536,10 +531,16 @@ const ProductDetail = () => {
         const response = await API.get(`/product/${id}`);
         setProduct(response.data);
 
-        const imgResponse = await API.get(`/product/${id}/image`, {
-          responseType: "blob",
-        });
-        setImageUrl(URL.createObjectURL(imgResponse.data));
+         try {
+  const response = await API.get(`/product/${id}`);
+  setProduct(response.data);
+
+  // Directly use imageUrl from backend
+  setImageUrl(response.data.imageUrl);
+
+} catch (error) {
+  console.error("Error fetching product:", error);
+}
       } catch (error) {
         console.error("Error fetching product:", error);
       }
@@ -565,7 +566,8 @@ const ProductDetail = () => {
   return (
     <div className="product-detail">
       <div className="product-image-section">
-        <img src={imageUrl} alt={product.name} />
+       <img src={imageUrl} loading="lazy" />
+
       </div>
 
       <div className="product-info-section">
@@ -659,7 +661,8 @@ const Cart = () => {
       <div className="cart-items">
         {cart.map((item) => (
           <div key={item.id} className="cart-item">
-            <img src={item.imageUrl} alt={item.name} />
+            <img src={imageUrl} loading="lazy" />
+
             <div className="item-details">
               <h3>{item.name}</h3>
               <p>{item.brand}</p>
