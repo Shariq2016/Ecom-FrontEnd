@@ -67,21 +67,8 @@ const AppProvider = ({ children }) => {
       setIsLoading(true);
       const response = await API.get("/products");
 
-      const productsWithImages = await Promise.all(
-        response.data.map(async (product) => {
-          try {
-            const imgResponse = await API.get(`/product/${product.id}/image`, {
-              responseType: "blob",
-            });
-            const imageUrl = URL.createObjectURL(imgResponse.data);
-            return { ...product, imageUrl };
-          } catch (error) {
-            return { ...product, imageUrl: "" };
-          }
-        })
-      );
-
-      setProducts(productsWithImages);
+     
+      setProducts(response.data);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -188,26 +175,13 @@ const Navbar = ({ onCategorySelect, onSearch }) => {
       try {
         const response = await API.get(`/products/search?keyword=${value}`);
         
-        // Add image URLs to search results
-        const resultsWithImages = await Promise.all(
-          response.data.map(async (product) => {
-            try {
-              const imgResponse = await API.get(`/product/${product.id}/image`, {
-                responseType: "blob",
-              });
-              const imageUrl = URL.createObjectURL(imgResponse.data);
-              return { ...product, imageUrl };
-            } catch (error) {
-              return { ...product, imageUrl: "" };
-            }
-          })
-        );
+       
         
-        setSearchResults(resultsWithImages);
+        setSearchResults(response.data);
         setShowResults(true);
 
         // ✅ Send search results to Home page
-        onSearch(value, resultsWithImages);
+        onSearch(value, response.data);
       } catch (error) {
         console.error("Search error:", error);
       }
@@ -397,10 +371,16 @@ const ProductSection = ({ section, products, addToCart, selectedCategory }) => {
             <Link to={`/product/${product.id}`} className="product-card-link">
               <div className="product-media">
                 <img
-                  src={product.imageUrl || "/placeholder.jpg"}
-                  alt={product.name}
-                  loading="lazy"
-                />
+  src={
+    product.imageUrl
+      ? product.imageUrl.replace(
+          "/upload/",
+          "/upload/w_800,f_auto,q_auto/"
+        )
+      : ""
+  }
+  loading="lazy"
+/>
               </div>
 
               <div className="product-body">
@@ -461,11 +441,17 @@ const Home = ({ selectedCategory, searchQuery, filteredProducts }) => {
                 <div key={product.id} className="product-card">
                   <Link to={`/product/${product.id}`} className="product-card-link">
                     <div className="product-media">
-                      <img
-                        src={product.imageUrl || "/placeholder.jpg"}
-                        alt={product.name}
-                        loading="lazy"
-                      />
+                    <img
+  src={
+    product.imageUrl
+      ? product.imageUrl.replace(
+          "/upload/",
+          "/upload/w_800,f_auto,q_auto/"
+        )
+      : ""
+  }
+  loading="lazy"
+/>
                     </div>
 
                     <div className="product-body">
@@ -566,8 +552,17 @@ const ProductDetail = () => {
   return (
     <div className="product-detail">
       <div className="product-image-section">
-       <img src={imageUrl} loading="lazy" />
-
+      <img
+  src={
+    imageUrl
+      ? imageUrl.replace(
+          "/upload/",
+          "/upload/w_800,f_auto,q_auto/"
+        )
+      : ""
+  }
+  loading="lazy"
+/>
       </div>
 
       <div className="product-info-section">
@@ -575,9 +570,7 @@ const ProductDetail = () => {
           <span className="category-badge">{product.category}</span>
           <h1>{product.name}</h1>
           <p className="brand">{product.brand}</p>
-          <p className="release-date">
-            Listed: {new Date(product.releaseDate).toLocaleDateString()}
-          </p>
+          
         </div>
 
         <div className="product-description">
@@ -661,8 +654,17 @@ const Cart = () => {
       <div className="cart-items">
         {cart.map((item) => (
           <div key={item.id} className="cart-item">
-            <img src={imageUrl} loading="lazy" />
-
+           <img
+  src={
+    item.imageUrl
+      ? item.imageUrl.replace(
+          "/upload/",
+          "/upload/w_800,f_auto,q_auto/"
+        )
+      : ""
+  }
+  loading="lazy"
+/>
             <div className="item-details">
               <h3>{item.name}</h3>
               <p>{item.brand}</p>
@@ -863,17 +865,23 @@ const ProductForm = ({ isEdit = false }) => {
         </div>
 
         <div className="form-row">
-          <div className="form-group">
-            <label>Price ($)</label>
-            <input
-              type="number"
-              value={formData.price}
-              onChange={(e) =>
-                setFormData({ ...formData, price: e.target.value })
-              }
-              required
-            />
-          </div>
+    <div className="form-group">
+        <label>Price (Rs )</label>
+        <input
+          type="number"
+          min="10"
+          step="10"
+          value={formData.price}
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value >= 0) {
+              setFormData({ ...formData, price: value });
+            }
+          }}
+          required
+        />
+      </div>
+
 
           <div className="form-group">
             <label>Category</label>
@@ -909,17 +917,21 @@ const ProductForm = ({ isEdit = false }) => {
             />
           </div>
 
-          <div className="form-group">
-            <label>Release Date</label>
-            <input
-              type="date"
-              value={formData.releaseDate}
-              onChange={(e) =>
-                setFormData({ ...formData, releaseDate: e.target.value })
-              }
-              required
-            />
-          </div>
+         <div className="form-group">
+          <label>Unit</label>
+         <select
+  value={formData.unit}
+  onChange={(e) =>
+    setFormData({ ...formData, unit: e.target.value })
+  }
+  required
+>
+  <option value="kilogram">Kilograms (Kg)</option>
+  <option value="gram">Grams (g)</option>
+</select>
+
+        </div>
+
         </div>
 
         {/* SECTION SELECTION */}
