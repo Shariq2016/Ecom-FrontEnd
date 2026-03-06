@@ -30,10 +30,8 @@ export default function AdminLogin() {
         navigate("/");
       }
     } catch (err) {
-      // Handle errors
-      if (err.response) {
-        // Server responded with error status
-        setError(err.response.data.message || "Invalid credentials!");
+      if (err.response?.status === 401) {
+        setError("Invalid username or password.");
       } else if (err.request) {
         // Request was made but no response received
         setError("Cannot connect to server. Please try again.");
@@ -41,7 +39,6 @@ export default function AdminLogin() {
         // Something else happened
         setError("An error occurred. Please try again.");
       }
-      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }

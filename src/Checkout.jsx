@@ -1,11 +1,13 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppContext } from "./App";
+import { AppContext } from "./AppContext";
+import { useToast } from "./Toast";
 import "./styles.css";
 import axios from "axios";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const toast    = useToast();
   const { cart, clearCart } = useContext(AppContext);
 
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment
@@ -127,11 +129,10 @@ const Checkout = () => {
 
       // Clear cart and show success
       clearCart();
-      alert(`🎉 Order placed successfully!\n\nOrder Number: ${orderData.orderNumber}\n\nYou will pay ₹${total.toFixed(2)} in cash upon delivery.\n\nWe'll send you updates via email at ${shippingDetails.email}`);
+      toast.success(`🎉 Order placed! #${orderData.orderNumber} — Pay ₹${total.toFixed(2)} on delivery`);
       navigate("/");
     } catch (error) {
-      console.error("Error creating COD order:", error);
-      alert("Error processing order. Please try again.");
+      toast.error("Error processing order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -202,15 +203,14 @@ const Checkout = () => {
 
       // Step 3: Open Razorpay checkout
       const razorpay = new window.Razorpay(options);
-      razorpay.on("payment.failed", function (response) {
-        alert("Payment failed! Please try again.");
+      razorpay.on("payment.failed", (response) => {
+        toast.error("Payment failed! Please try again.");
         console.error(response.error);
         setLoading(false);
       });
       razorpay.open();
     } catch (error) {
-      console.error("Error initiating payment:", error);
-      alert("Error processing payment. Please try again.");
+      toast.error("Error processing payment. Please try again.");
       setLoading(false);
     }
   };
@@ -239,14 +239,13 @@ const Checkout = () => {
       if (verifyData.success) {
         // Clear cart and show success
         clearCart();
-        alert(`🎉 Order placed successfully!\n\nOrder Number: ${verifyData.orderNumber}\nPayment ID: ${paymentResponse.razorpay_payment_id}`);
+        toast.success(`🎉 Order placed! #${verifyData.orderNumber}`);
         navigate("/");
       } else {
-        alert("Payment verification failed. Please contact support.");
+        toast.error("Payment verification failed. Please contact support.");
       }
     } catch (error) {
-      console.error("Error verifying payment:", error);
-      alert("Payment successful but order processing failed. Please contact support with Payment ID: " + paymentResponse.razorpay_payment_id);
+      toast.error(`Payment received but order failed. Contact support with Payment ID: ${paymentResponse.razorpay_payment_id}`);
     } finally {
       setLoading(false);
     }

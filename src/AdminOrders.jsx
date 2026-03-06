@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast, useConfirm } from "./Toast";
 import axios from "axios";
 import "./AdminOrders.css";
 
 export default function AdminOrders() {
   const navigate = useNavigate();
+  const toast    = useToast();
+  const confirm  = useConfirm();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
@@ -41,10 +44,8 @@ export default function AdminOrders() {
       console.log("Fetched orders:", response.data);
       setOrders(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
-      console.error("Error fetching orders:", error);
-      if (error.response?.status === 401) {
-        navigate("/admin/login");
-      }
+      if (error.response?.status === 401) navigate("/admin/login");
+      else toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
     }
@@ -61,19 +62,16 @@ export default function AdminOrders() {
       );
 
       fetchOrders();
-      alert(`Order status updated to ${newStatus}`);
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
-      console.error("Error updating order:", error);
-      alert("Failed to update order status");
+      toast.error("Failed to update order status");
     }
   };
 
   // NEW: Delete order handler
   const handleDeleteOrder = async (orderId, orderNumber) => {
-    if (!window.confirm(`⚠️ Are you sure you want to permanently delete order ${orderNumber}?\n\nThis action cannot be undone!`)) {
-      return;
-    }
-
+    const ok = await confirm(`Delete order ${orderNumber}?\n\nThis action cannot be undone!`);
+    if (!ok) return;
     try {
       const token = localStorage.getItem("token");
       
@@ -82,24 +80,17 @@ export default function AdminOrders() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      alert(`✅ Order ${orderNumber} deleted successfully`);
+      toast.success(`Order ${orderNumber} deleted successfully`);
       fetchOrders(); // Refresh the list
     } catch (error) {
       console.error("Error deleting order:", error);
-      alert("❌ Failed to delete order. Please try again.");
+      toast.error("Failed to delete order. Please try again.");
     }
   };
 
   // Helper function to get full address
   const getFullAddress = (order) => {
-    const parts = [
-      order.shippingAddress,
-      order.shippingCity,
-      order.shippingState,
-      order.shippingPincode,
-      order.shippingCountry
-    ].filter(Boolean);
-    
+    const parts = [order.shippingAddress, order.shippingCity, order.shippingState, order.shippingPincode, order.shippingCountry].filter(Boolean);
     return parts.length > 0 ? parts.join(", ") : "Address not available";
   };
 
@@ -137,11 +128,7 @@ export default function AdminOrders() {
     return configs[status] || configs.PENDING;
   };
 
-  const openOrderDetails = (order) => {
-    console.log("Opening order details:", order);
-    setSelectedOrder(order);
-    setShowModal(true);
-  };
+  const openOrderDetails = (order) => { setSelectedOrder(order); setShowModal(true); };
 
   return (
     <div className="admin-orders-container">
@@ -165,66 +152,34 @@ export default function AdminOrders() {
       <div className="stats-grid">
         <div className="stat-card" style={{"--accent": "#667eea"}}>
           <div className="stat-icon">📊</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">Total Orders</div>
-          </div>
+          <div className="stat-content"><div className="stat-value">{stats.total}</div><div className="stat-label">Total Orders</div></div>
         </div>
         
         <div className="stat-card" style={{"--accent": "#4caf50"}}>
           <div className="stat-icon">💰</div>
-          <div className="stat-content">
-            <div className="stat-value">₹{stats.revenue.toFixed(2)}</div>
-            <div className="stat-label">Total Revenue</div>
-          </div>
+          <div className="stat-content"><div className="stat-value">₹{stats.revenue.toFixed(2)}</div><div className="stat-label">Total Revenue</div></div>
         </div>
         
         <div className="stat-card" style={{"--accent": "#ff9800"}}>
           <div className="stat-icon">⏳</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.pending}</div>
-            <div className="stat-label">Pending Orders</div>
-          </div>
+          <div className="stat-content"><div className="stat-value">{stats.pending}</div><div className="stat-label">Pending Orders</div></div>
         </div>
         
         <div className="stat-card" style={{"--accent": "#9c27b0"}}>
           <div className="stat-icon">✓</div>
-          <div className="stat-content">
-            <div className="stat-value">{stats.delivered}</div>
-            <div className="stat-label">Delivered</div>
-          </div>
+          <div className="stat-content"><div className="stat-value">{stats.confirmed}</div><div className="stat-label">Confirmed</div></div>
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="controls-section">
-        <div className="filter-pills">
-          {["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED"].map(status => (
-            <button
-              key={status}
-              className={`filter-pill ${filter === status ? "active" : ""}`}
-              onClick={() => setFilter(status)}
-            >
-              {status === "ALL" ? "All" : getStatusConfig(status).label}
-              <span className="pill-count">
-                {status === "ALL" ? stats.total : stats[status.toLowerCase()] || 0}
-              </span>
-            </button>
+      <div className="orders-controls">
+        <input
+          type="text" placeholder="Search orders..." value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} className="search-input"
+        />
+        <div className="filter-tabs">
+          {["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"].map(f => (
+            <button key={f} className={`filter-tab ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>{f}</button>
           ))}
-        </div>
-
-        <div className="search-container">
-          <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="M21 21L16.65 16.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search orders, customers, emails..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
-          />
         </div>
       </div>
 
