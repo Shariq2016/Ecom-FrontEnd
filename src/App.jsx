@@ -21,7 +21,21 @@ function App() {
     setSearchQuery(query);
     setFilteredProducts(results);
   }, []);
+  
+  const Snowfall = () => {
+  // Generate 20 snowflakes
+  const snowflakes = Array.from({ length: 20 }, (_, i) => i);
 
+  return (
+    <div className="snowfall-container">
+      {snowflakes.map((i) => (
+        <div key={i} className="snowflake">
+          ❄
+        </div>
+      ))}
+    </div>
+  );
+};
   return (
     <BrowserRouter>
       <AppProvider>
