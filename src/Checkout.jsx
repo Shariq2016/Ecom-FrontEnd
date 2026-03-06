@@ -54,25 +54,15 @@ const Checkout = () => {
     const newErrors = {};
 
     if (!shippingDetails.fullName.trim()) newErrors.fullName = "Name is required";
-    if (!shippingDetails.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(shippingDetails.email)) {
-      newErrors.email = "Invalid email address";
-    }
-    if (!shippingDetails.phone.trim()) {
-      newErrors.phone = "Phone is required";
-    } else if (!/^\d{10}$/.test(shippingDetails.phone)) {
-      newErrors.phone = "Phone must be 10 digits";
-    }
+    if (!shippingDetails.email.trim()) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(shippingDetails.email)) newErrors.email = "Invalid email address";
+    if (!shippingDetails.phone.trim()) newErrors.phone = "Phone is required";
+    else if (!/^\d{10}$/.test(shippingDetails.phone)) newErrors.phone = "Phone must be 10 digits";
     if (!shippingDetails.address.trim()) newErrors.address = "Address is required";
     if (!shippingDetails.city.trim()) newErrors.city = "City is required";
     if (!shippingDetails.state.trim()) newErrors.state = "State is required";
-    if (!shippingDetails.pincode.trim()) {
-      newErrors.pincode = "Pincode is required";
-    } else if (!/^\d{6}$/.test(shippingDetails.pincode)) {
-      newErrors.pincode = "Pincode must be 6 digits";
-    }
-
+    if (!shippingDetails.pincode.trim()) newErrors.pincode = "Pincode is required";
+    else if (!/^\d{6}$/.test(shippingDetails.pincode)) newErrors.pincode = "Pincode must be 6 digits";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -81,18 +71,10 @@ const Checkout = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setShippingDetails((prev) => ({ ...prev, [name]: value }));
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
-    }
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Proceed to payment
-  const handleProceedToPayment = () => {
-    if (validateForm()) {
-      setStep(2);
-    }
-  };
+  const handleProceedToPayment = () => { if (validateForm()) setStep(2); };
 
   // Handle Cash on Delivery
   const handleCODOrder = async () => {
@@ -179,26 +161,11 @@ const Checkout = () => {
         name: "🌰 AYaan's Dry-fruit Store",
         description: "Order Payment",
         order_id: orderData.id,
-        handler: function (response) {
-          // Payment successful
-          handlePaymentSuccess(response);
-        },
-        prefill: {
-          name: shippingDetails.fullName,
-          email: shippingDetails.email,
-          contact: shippingDetails.phone,
-        },
-        notes: {
-          address: `${shippingDetails.address}, ${shippingDetails.city}, ${shippingDetails.state} - ${shippingDetails.pincode}`,
-        },
-        theme: {
-          color: "#6366f1",
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-          }
-        }
+        handler: (response) => handlePaymentSuccess(response),
+        prefill: { name: shippingDetails.fullName, email: shippingDetails.email, contact: shippingDetails.phone },
+        notes: { address: `${shippingDetails.address}, ${shippingDetails.city}, ${shippingDetails.state} - ${shippingDetails.pincode}` },
+        theme: { color: "#6366f1" },
+        modal: { ondismiss: () => setLoading(false) }
       };
 
       // Step 3: Open Razorpay checkout
