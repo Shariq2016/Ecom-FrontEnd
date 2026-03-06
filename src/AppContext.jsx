@@ -107,7 +107,14 @@ const AppProvider = ({ children }) => {
     }
     try {
       setIsLoading(true);
+     const t1 = Date.now();
+      console.log("⏱ [FRONTEND] API call started");
+      
       const { data } = await API.get("/products");
+      
+      const t2 = Date.now();
+      console.log(`⏱ [FRONTEND] Response received in: ${t2 - t1}ms`);
+      console.log(`⏱ [FRONTEND] Products count: ${data.length}`);
       productListCache.data = data;
       productListCache.ts   = Date.now();
       setProducts(data);
