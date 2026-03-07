@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API } from "./AppContext";
 import { useToast, useConfirm } from "./Toast";
-import axios from "axios";
 import "./AdminOrders.css";
 
 export default function AdminOrders() {
@@ -16,33 +15,16 @@ export default function AdminOrders() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  useEffect(() => { fetchOrders(); }, []);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
-      if (!token) {
-        navigate("/admin/login");
-        return;
-      }
-          const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, 
-});
+      if (!token) { navigate("/admin/login"); return; }
 
-
-      // Fetch all orders
-      const response = await API.get("/orders", {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-
-      
-      console.log("Fetched orders:", response.data);
+      // Uses shared API — token injected automatically
+      const response = await API.get("/orders");
       setOrders(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
       if (error.response?.status === 401) navigate("/admin/login");
@@ -54,14 +36,7 @@ export default function AdminOrders() {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      const token = localStorage.getItem("token");
-      
-      await axios.put(
-       import.meta.env.VITE_API_URL+`/order/${orderId}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      await API.put(`/order/${orderId}/status`, { status: newStatus });
       fetchOrders();
       toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
@@ -69,27 +44,18 @@ export default function AdminOrders() {
     }
   };
 
-  // NEW: Delete order handler
   const handleDeleteOrder = async (orderId, orderNumber) => {
     const ok = await confirm(`Delete order ${orderNumber}?\n\nThis action cannot be undone!`);
     if (!ok) return;
     try {
-      const token = localStorage.getItem("token");
-      
-      await axios.delete(
-        import.meta.env.VITE_API_URL+`/order/${orderId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
+      await API.delete(`/order/${orderId}`);
       toast.success(`Order ${orderNumber} deleted successfully`);
-      fetchOrders(); // Refresh the list
+      fetchOrders();
     } catch (error) {
-      console.error("Error deleting order:", error);
       toast.error("Failed to delete order. Please try again.");
     }
   };
 
-  // Helper function to get full address
   const getFullAddress = (order) => {
     const parts = [order.shippingAddress, order.shippingCity, order.shippingState, order.shippingPincode, order.shippingCountry].filter(Boolean);
     return parts.length > 0 ? parts.join(", ") : "Address not available";
@@ -97,34 +63,31 @@ export default function AdminOrders() {
 
   const filteredOrders = orders.filter((order) => {
     const matchesFilter = filter === "ALL" || order.status === filter;
-    const matchesSearch =
-      searchQuery === "" ||
+    const matchesSearch = searchQuery === "" ||
       order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.customerEmail?.toLowerCase().includes(searchQuery.toLowerCase());
-
     return matchesFilter && matchesSearch;
   });
 
   const stats = {
-    total: orders.length,
-    pending: orders.filter(o => o.status === "PENDING").length,
+    total:     orders.length,
+    pending:   orders.filter(o => o.status === "PENDING").length,
     confirmed: orders.filter(o => o.status === "CONFIRMED").length,
-    shipped: orders.filter(o => o.status === "SHIPPED").length,
+    shipped:   orders.filter(o => o.status === "SHIPPED").length,
     delivered: orders.filter(o => o.status === "DELIVERED").length,
-    revenue: orders
-      .filter(o => ["CONFIRMED", "SHIPPED", "DELIVERED"].includes(o.status))
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+    revenue:   orders.filter(o => ["CONFIRMED", "SHIPPED", "DELIVERED"].includes(o.status))
+                     .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
   };
 
   const getStatusConfig = (status) => {
     const configs = {
-      PENDING: { color: "#ff9800", icon: "⏳", label: "Pending", next: ["CONFIRMED", "CANCELLED"] },
-      CONFIRMED: { color: "#4caf50", icon: "✓", label: "Confirmed", next: ["SHIPPED", "CANCELLED"] },
-      SHIPPED: { color: "#2196f3", icon: "🚚", label: "Shipped", next: ["DELIVERED"] },
+      PENDING:   { color: "#ff9800", icon: "⏳", label: "Pending",   next: ["CONFIRMED", "CANCELLED"] },
+      CONFIRMED: { color: "#4caf50", icon: "✓",  label: "Confirmed", next: ["SHIPPED", "CANCELLED"] },
+      SHIPPED:   { color: "#2196f3", icon: "🚚", label: "Shipped",   next: ["DELIVERED"] },
       DELIVERED: { color: "#9c27b0", icon: "📦", label: "Delivered", next: [] },
-      CANCELLED: { color: "#f44336", icon: "✕", label: "Cancelled", next: [] },
-      FAILED: { color: "#d32f2f", icon: "⚠", label: "Failed", next: ["PENDING"] }
+      CANCELLED: { color: "#f44336", icon: "✕",  label: "Cancelled", next: [] },
+      FAILED:    { color: "#d32f2f", icon: "⚠",  label: "Failed",    next: ["PENDING"] }
     };
     return configs[status] || configs.PENDING;
   };
@@ -168,10 +131,8 @@ export default function AdminOrders() {
       </div>
 
       <div className="orders-controls">
-        <input
-          type="text" placeholder="Search orders..." value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} className="search-input"
-        />
+        <input type="text" placeholder="Search orders..." value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} className="search-input" />
         <div className="filter-tabs">
           {["ALL", "PENDING", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"].map(f => (
             <button key={f} className={`filter-tab ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>{f}</button>
@@ -187,9 +148,7 @@ export default function AdminOrders() {
         <div className="orders-table-container">
           <table className="orders-table">
             <thead>
-              <tr>
-                <th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th>
-              </tr>
+              <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filteredOrders.map((order) => {
@@ -288,9 +247,7 @@ export default function AdminOrders() {
                         <div className="item-price">₹{(item.price * item.quantity).toFixed(2)}</div>
                       </div>
                     ))
-                  ) : (
-                    <p>No items found</p>
-                  )}
+                  ) : (<p>No items found</p>)}
                 </div>
               </div>
               <div className="detail-section">
