@@ -2,13 +2,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppContext, API, SECTIONS, CATEGORIES, fetchProductById, bustProductCache } from "./AppContext";
+import { useToast, useConfirm } from "./Toast";
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 const optimiseImg = (url) =>
   url ? url.replace("/upload/", "/upload/w_800,f_auto,q_auto/") : "";
 
 // ── ProductCard (extracted — no more duplication) ─────────────────────────────
-const ProductCard = ({ product, addToCart }) => (
+const ProductCard = ({ product, addToCart }) => {
+  const toast = useToast();
+  return (
   <div className="product-card">
     <Link to={`/product/${product.id}`} className="product-card-link">
       <div className="product-media">
@@ -24,7 +27,7 @@ const ProductCard = ({ product, addToCart }) => (
     </Link>
     <div className="product-actions">
       <button
-        onClick={() => { addToCart(product); alert("Added to cart!"); }}
+        onClick={() => { addToCart(product); toast.success("Added to cart!"); }}
         disabled={!product.productAvailable}
         className="product-cta"
       >
@@ -32,7 +35,8 @@ const ProductCard = ({ product, addToCart }) => (
       </button>
     </div>
   </div>
-);
+  );
+};
 
 // ── ProductSection ────────────────────────────────────────────────────────────
 const ProductSection = ({ section, products, addToCart, selectedCategory }) => {
@@ -122,6 +126,8 @@ export const ProductDetail = () => {
   const { id }      = useParams();
   const navigate    = useNavigate();
   const { addToCart, refreshProducts } = React.useContext(AppContext);
+  const toast   = useToast();
+  const confirm = useConfirm();
   const [product,  setProduct]  = useState(null);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -143,17 +149,18 @@ export const ProductDetail = () => {
   }, [id]);
 
   const handleDelete = useCallback(async () => {
-    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    const ok = await confirm("Are you sure you want to delete this product?");
+    if (!ok) return;
     try {
       await API.delete(`/product/${id}`);
       bustProductCache(id);
-      alert("Product deleted successfully!");
+      toast.success("Product deleted successfully!");
       refreshProducts();
       navigate("/");
     } catch {
-      alert("Error deleting product");
+      toast.error("Error deleting product");
     }
-  }, [id, navigate, refreshProducts]);
+  }, [id, navigate, refreshProducts, toast, confirm]);
 
   if (!product) return <div className="loading">Loading...</div>;
 
@@ -175,7 +182,7 @@ export const ProductDetail = () => {
         <div className="purchase-section">
           <div className="price-tag">Rs {product.price}</div>
           <button
-            onClick={() => { addToCart(product); alert("Added to cart!"); }}
+            onClick={() => { addToCart(product); toast.success("Added to cart!"); }}
             disabled={!product.productAvailable}
             className="add-cart-btn-large"
           >
@@ -198,6 +205,7 @@ export const ProductDetail = () => {
 export const Cart = () => {
   const navigate = useNavigate();
   const { cart, removeFromCart, updateQuantity, clearCart } = React.useContext(AppContext);
+  const toast = useToast();
   const [showCheckout, setShowCheckout] = useState(false);
 
   const total = useMemo(
@@ -211,13 +219,13 @@ export const Cart = () => {
         await API.put(`/product/${item.id}`, { ...item, stockQuantity: item.stockQuantity - item.quantity });
         bustProductCache(item.id);
       }
-      alert("Order placed successfully!");
+      toast.success("Order placed successfully!");
       clearCart();
       setShowCheckout(false);
     } catch {
-      alert("Error processing checkout");
+      toast.error("Error processing checkout");
     }
-  }, [cart, clearCart]);
+  }, [cart, clearCart, toast]);
 
   if (cart.length === 0) {
     return (
@@ -288,6 +296,7 @@ export const ProductForm = ({ isEdit = false }) => {
   const navigate  = useNavigate();
   const { id }    = useParams();
   const { refreshProducts } = React.useContext(AppContext);
+  const toast = useToast();
 
   const [formData,          setFormData]          = useState(DEFAULT_FORM);
   const [selectedSections,  setSelectedSections]  = useState(["all-products"]);
@@ -322,7 +331,7 @@ export const ProductForm = ({ isEdit = false }) => {
         }
       } catch (err) {
         console.error("Error fetching product:", err);
-        alert("Failed to load product");
+        toast.error("Failed to load product");
       }
     };
     load();
@@ -349,16 +358,16 @@ export const ProductForm = ({ isEdit = false }) => {
       if (isEdit) {
         await API.put(`/product/${id}`, formDataToSend, { headers: { "Content-Type": "multipart/form-data" } });
         bustProductCache(id);
-        alert("Product updated successfully!");
+        toast.success("Product updated successfully!");
       } else {
         await API.post("/product", formDataToSend, { headers: { "Content-Type": "multipart/form-data" } });
         bustProductCache();
-        alert("Product added successfully!");
+        toast.success("Product added successfully!");
       }
       refreshProducts();
       navigate("/");
     } catch (err) {
-      alert("Error saving product: " + (err.response?.data || err.message));
+      toast.error("Error saving product: " + (err.response?.data || err.message));
     }
   };
 
