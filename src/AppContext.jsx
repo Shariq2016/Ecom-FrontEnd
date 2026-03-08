@@ -6,7 +6,7 @@ export const AppContext = createContext();
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
 export const API = axios.create({
-  baseURL: "http://localhost:8080/api",
+  baseURL: import.meta.env.VITE_API_URL,
 });
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -18,7 +18,9 @@ API.interceptors.request.use((config) => {
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const method = error.config?.method?.toUpperCase();
+    const isWriteRequest = ["POST", "PUT", "DELETE"].includes(method);
+    if (error.response?.status === 401 && isWriteRequest) {
       localStorage.removeItem("token");
       window.location.href = "/admin/login";
     }

@@ -7,8 +7,8 @@
     <title>R.K Dry Fruit Store</title>
 
     <!-- Preconnect: establishes TCP connection to backend BEFORE React loads -->
-    <link rel="preconnect" href="https://ecom-backend-1-ydje.onrender.com" />
-    <link rel="dns-prefetch" href="https://ecom-backend-1-ydje.onrender.com" />
+    <link rel="preconnect" href="https://ecom-backend-s3h9.onrender.com" />
+    <link rel="dns-prefetch" href="https://ecom-backend-s3h9.onrender.com" />
 
     <!-- Preconnect to Cloudinary for images -->
     <link rel="preconnect" href="https://res.cloudinary.com" />
@@ -16,7 +16,7 @@
     <!-- Start API call IMMEDIATELY — runs in parallel with JS bundle download -->
     <script>
       window.__productsPromise = fetch(
-        'https://ecom-backend-1-ydje.onrender.com/api/products'
+        'https://ecom-backend-s3h9.onrender.com/api/products'
       )
         .then(function(r) { return r.ok ? r.json() : null; })
         .catch(function() { return null; });

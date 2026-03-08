@@ -36,7 +36,7 @@ const Checkout = () => {
 
   const fetchRazorpayKey = async () => {
     try {
-      const response = await fetch("https://ecom-backend-1-ydje.onrender.com/api/razorpay-key");
+      const response = await fetch("https://ecom-backend-s3h9.onrender.com/api/razorpay-key");
       const data = await response.json();
       setRazorpayKey(data.key);
     } catch (error) {
@@ -82,7 +82,7 @@ const Checkout = () => {
 
     try {
       // Create COD order on backend
-      const orderResponse = await fetch( "https://ecom-backend-1-ydje.onrender.com/api/create-cod-order", {
+      const orderResponse = await fetch( "https://ecom-backend-s3h9.onrender.com/api/create-cod-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -94,7 +94,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || "https://ecom-backend-1-ydje.onrender.com/api/image"
+            imageUrl: item.imageUrl || "https://ecom-backend-s3h9.onrender.com/api/image"
           })),
           subtotal: subtotal,
           shippingCost: shipping,
@@ -126,7 +126,7 @@ const Checkout = () => {
 
     try {
       // Step 1: Create order on backend
-      const orderResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/create-order", {
+      const orderResponse = await fetch("https://ecom-backend-s3h9.onrender.com/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +141,7 @@ const Checkout = () => {
             category: item.category,
             price: item.price,
             quantity: item.quantity,
-            imageUrl: item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`
+            imageUrl: item.imageUrl || `https://ecom-backend-s3h9.onrender.com/api/product/${item.id}/image`
           })),
           total: total
         }),
@@ -188,7 +188,7 @@ const Checkout = () => {
       setLoading(true);
 
       // Verify payment on backend
-      const verifyResponse = await fetch("https://ecom-backend-1-ydje.onrender.com/api/verify-payment", {
+      const verifyResponse = await fetch("https://ecom-backend-s3h9.onrender.com/api/verify-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -484,7 +484,7 @@ const Checkout = () => {
           <div className="order-items">
             {cart.map((item) => (
               <div key={item.id} className="order-item">
-                <img src={item.imageUrl || `https://ecom-backend-1-ydje.onrender.com/api/product/${item.id}/image`} alt={item.name} />
+                <img src={item.imageUrl || `https://ecom-backend-s3h9.onrender.com/api/product/${item.id}/image`} alt={item.name} />
                 <div className="order-item-details">
                   <h4>{item.name}</h4>
                   <p>Qty: {item.quantity}</p>
