@@ -6,7 +6,7 @@ export const AppContext = createContext();
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
 export const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "http://localhost:8080/api",
 });
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -14,13 +14,11 @@ API.interceptors.request.use((config) => {
   return config;
 });
 
-// Only redirect on 401 for write operations — not public GETs
+// Auto logout if server returns 401 (token expired or invalid)
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    const method = error.config?.method?.toUpperCase();
-    const isWriteRequest = ["POST", "PUT", "DELETE"].includes(method);
-    if (error.response?.status === 401 && isWriteRequest) {
+    if (error.response?.status === 401) {
       localStorage.removeItem("token");
       window.location.href = "/admin/login";
     }
@@ -110,7 +108,16 @@ const AppProvider = ({ children }) => {
     }
     try {
       setIsLoading(true);
-      const { data } = await API.get("/products");
+      // Use preloaded data from index.html if available (runs in parallel with bundle download)
+      let data;
+      if (!force && window.__productsPromise) {
+        data = await window.__productsPromise;
+        window.__productsPromise = null; // clear after first use
+      }
+      if (!data) {
+        const response = await API.get("/products");
+        data = response.data;
+      }
       productListCache.data = data;
       productListCache.ts   = Date.now();
       setProducts(data);
