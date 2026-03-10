@@ -46,8 +46,15 @@ const Checkout = () => {
 
   // Calculate totals
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 500 ? 0 : 50;
-  const total = subtotal + shipping ;
+
+  // Shipping: ₹25/kg, min ₹50, max ₹200
+  // unit="gram" products: divide stockQuantity by 1000 to get kg
+  const totalWeightKg = cart.reduce((sum, item) => {
+    const weightPerUnit = item.unit === "gram" ? item.stockQuantity / 1000 : item.stockQuantity;
+    return sum + weightPerUnit * item.quantity;
+  }, 0);
+  const shipping = Math.min(200, Math.max(50, Math.round(totalWeightKg * 25)));
+  const total = subtotal + shipping;
 
   // Validate shipping form
   const validateForm = () => {
@@ -503,7 +510,7 @@ const Checkout = () => {
             </div>
             <div className="total-row">
               <span>Shipping:</span>
-              <span>{shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}</span>
+              <span>₹{shipping.toFixed(2)}</span>
             </div>
           
             <div className="total-row grand-total">
@@ -512,11 +519,9 @@ const Checkout = () => {
             </div>
           </div>
 
-          {subtotal < 500 && (
-            <div className="shipping-note">
-              💡 Add ₹{(500 - subtotal).toFixed(2)} more for FREE shipping!
-            </div>
-          )}
+          <div className="shipping-note">
+            📦 Shipping: ₹50 min · ₹25/kg · max ₹200
+          </div>
         </div>
       </div>
     </div>
